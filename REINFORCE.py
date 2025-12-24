@@ -10,7 +10,7 @@ total_steps = math.ceil(len(train_dataset) / batch_size) * epochs
 beta_scheduler = CosineAnnealBeta(
     beta_max=2.0,
     beta_min=0.1,
-    total_steps=total_steps,
+    total_steps=total_steps
 )
 
 # here the model is identifying its action from the "state": an input
