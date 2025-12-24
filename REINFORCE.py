@@ -1,3 +1,5 @@
+import torch
+
 epochs = 100
 total_steps = math.ceil(len(train_dataset) / batch_size) * epochs
 
