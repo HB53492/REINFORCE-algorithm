@@ -11,7 +11,7 @@ beta_scheduler = CosineAnnealBeta(
     total_steps=total_steps,
 )
 
-# here the model is idenifying its action from the state
+# here the model is identifying its action from the "state": an input
 def select_action(model, state):
     logits = model(state)  # shape: (batch_size, num_classes)
     dist = torch.distributions.Categorical(logits=logits)
