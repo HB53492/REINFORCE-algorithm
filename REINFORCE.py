@@ -7,9 +7,10 @@ total_steps = math.ceil(len(train_dataset) / batch_size) * epochs
 # higher beta: exploration; lower beta: exploitation
 # you'll likely want to schedule your beta, although not necessarily like this
 # beta_max of 2 is quite high but you can go higher depending on noise
+# too low of a beta_min will cause overconfidence
 beta_scheduler = CosineAnnealBeta(
     beta_max=2.0,
-    beta_min=0.1,
+    beta_min=0.3,
     total_steps=total_steps
 )
 
