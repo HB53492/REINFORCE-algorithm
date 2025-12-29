@@ -5,13 +5,14 @@ total_steps = math.ceil(len(train_dataset) / batch_size) * epochs
 
 # beta is the exploration--exploitation variable
 # higher beta: exploration; lower beta: exploitation
-# you'll likely want to schedule your beta, although not necessarily like this
+# you'll want to schedule your beta; no need to get fancy
 # beta_max of 2 is quite high but you can go higher depending on noise
 # too low of a beta_min will cause overconfidence
-beta_scheduler = CosineAnnealBeta(
-    beta_max=2.0,
-    beta_min=0.3,
-    total_steps=total_steps
+beta_scheduler = stepScheduler(
+    beta_max=2.0, # about 40% exploration
+    beta_mid=1.0, # 30% starting to exploit
+    beta_min=0.3, # 30% really exploiting now
+    total_epochs=epochs
 )
 
 # here the model is identifying its action from the "state": an input
@@ -27,16 +28,16 @@ def select_action(model, state):
 # you'll need to define the reward function
 # a dictionary is a good choice for multi-class prediction
 # where each key is (the model's action, actual label)
-# epsilon and partial rewards help smooth the probability dist and encourage learning
+# avoid empty rewards i.e. returning 0
+# punish wrong decisions and reinforce better -> correct choices
 def compute_reward(action, label):
-    epsilon = 0.1
     rewards = {
-        (0, 0): 1.0, (0, 1): 0.0, (0, 2): 0.0, (0, 3): 0.0, 
-        (1, 0): 0.0, (1, 1): 1.0, (1, 2): 0.25, (1, 3): 0.5, 
-        (2, 0): 0.0, (2, 1): 0.25, (2, 2): 1.0, (2, 3): 0.5, 
-        (3, 0): 0.0, (3, 1): 0.5, (3, 2): 0.5, (3, 3): 1.0 
+        (0, 0):  2.0, (0, 1): -1.0, (0, 2): -1.0, (0, 3): -1.0,
+        (1, 0): -1.0, (1, 1):  2.0, (1, 2):  0.5, (1, 3):  0.5,
+        (2, 0): -1.0, (2, 1):  0.5, (2, 2):  2.0, (2, 3):  0.5,
+        (3, 0): -1.0, (3, 1):  0.5, (3, 2):  0.5, (3, 3):  2.0
     }
-    return rewards[(action, label)] + epsilon
+    return rewards[(action, label)]
 
 # how loss is calculated for reinforcement learning
 def reinforce_loss(log_probs: torch.Tensor, rewards: list[float]) -> torch.Tensor:
