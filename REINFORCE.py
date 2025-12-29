@@ -1,7 +1,6 @@
 import torch
 
 epochs = 100
-total_steps = math.ceil(len(train_dataset) / batch_size) * epochs
 
 # beta is the exploration--exploitation variable
 # higher beta: exploration; lower beta: exploitation
@@ -73,8 +72,7 @@ def evaluate(model, dataloader):
 
 def train_model(policy, train_dataloader, val_dataloader, optimizer, epochs, beta_scheduler, print_every=20):
     policy.train() # policy is our model
-    criterion = nn.CrossEntropyLoss() # your's may be different
-
+    
     # good things to track for debugging
     history = {
         'loss': [],
@@ -97,14 +95,13 @@ def train_model(policy, train_dataloader, val_dataloader, optimizer, epochs, bet
             mel_spectrograms = mel_spectrograms.to(device)
             labels = labels.to(device)
 
-            beta = beta_scheduler.get_beta() # get our beta value
-
             # selection our action(s) from the policy
             actions, log_probs, logits, entropies = select_action(policy, mel_spectrograms)
 
             # compute individual rewards per sample
             rewards = [compute_reward(a.item(), l.item()) for a, l in zip(actions, labels)]
 
+            beta = beta_scheduler.get_beta()
             loss = reinforce_loss(log_probs, rewards)
             # entropy bonus is determined from our mean entropy with the beta multiplier
             entropy_bonus = beta * torch.mean(entropies)
@@ -114,9 +111,6 @@ def train_model(policy, train_dataloader, val_dataloader, optimizer, epochs, bet
             total_samples += labels.size(0)
             total_rewards.extend(rewards)
             total_entropies.extend(entropies)
-
-            # step through your beta scheduler
-            beta_scheduler.step()
 
             optimizer.zero_grad()
             loss.backward()
@@ -157,7 +151,5 @@ def train_model(policy, train_dataloader, val_dataloader, optimizer, epochs, bet
             f"Val Avg Reward: " + str(round(val_avg_reward, 2)) + " | "
             f"Avg Entropy: " + str(round(avg_entropy, 2))
         )
-
-        if val_avg_reward >= 1.0: return history # optional early stopping if validation rewards are good
 
     return history
